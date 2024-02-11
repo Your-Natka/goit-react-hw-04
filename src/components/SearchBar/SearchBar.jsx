@@ -30,7 +30,7 @@ export const SearchBar = ({ onSearch }) => {
           name="query"
           className={css.input}
         />
-        <IconContext.Provider value={{ size: '2em', color: 'rgba(253, 45, 126, 0.5)' }}>
+        <IconContext.Provider value={{ size: '2em' }}>
           <button type="submit" className={css.button}>
             <AiOutlineSearch />
           </button>

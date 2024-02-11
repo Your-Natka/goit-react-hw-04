@@ -1,5 +1,6 @@
 .header {
   margin-bottom: 10px;
+  background-color: rgb(16, 69, 122);
 }
 
 .form {
@@ -14,7 +15,6 @@
   padding: 10px;
   width: 250px;
   border: none;
-  border-radius: 8px;
 }
 
 .input:focus {
@@ -27,7 +27,6 @@
 .button {
   position: absolute;
   left: 56%;
-  border-radius: 8px;
   border: none;
   padding: auto;
   background: none;
@@ -62,5 +61,7 @@
 }
 
 .icon {
+  color: rgba(0, 0, 0, 0.19);
+  stroke: #111;
   size: 10em;
 }
