@@ -1,24 +1,32 @@
-import { Toaster } from 'react-hot-toast';
-import { SearchBox } from './SearchBox';
-import { useEffect, useState } from 'react';
-import { Articles } from './Articles';
-import { fetchArticles } from '../api';
+import { useState, useEffect, useRef } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import { nanoid } from 'nanoid';
+import { SearchBar } from './SearchBar/SearchBar';
+import { ImageGallery } from './ImageGallery/ImageGallery';
+import { Loader } from './Loader/Loader';
+import { LoadMoreBtn } from './LoadMoreBtn/LoadMoreBtn';
+import { ErrorMessage } from './ErrorMessage/ErrorMessage';
+import { ImageModal } from './ImageModal/ImageModal';
+import { fetch } from '../api';
+import css from './App.module.css';
 
 export const App = () => {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState([]);
+  const [load, setLoad] = useState(false);
   const [error, setError] = useState(false);
+  const [modalIsOpen, setIsOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
-  const searchArticles = async newQuery => {
-    setQuery(`${Date.now()}/${newQuery}`);
+  const totalPages = useRef(0);
+
+  const searchImages = async newQuery => {
+    const id = nanoid(5);
+    setQuery(`${id}-${newQuery}`);
     setPage(1);
-    setArticles([]);
-  };
-
-  const handleLoadMore = () => {
-    setPage(page + 1);
+    setImages([]);
+    totalPages.current = 0;
   };
 
   useEffect(() => {
@@ -26,29 +34,64 @@ export const App = () => {
       return;
     }
 
-    async function fetchData() {
+    async function fetchImages() {
       try {
-        setLoading(true);
+        setLoad(true);
         setError(false);
-        const fetchedData = await fetchArticles(query.split('/')[1], page);
-        setArticles(prevArticles => [...prevArticles, ...fetchedData]);
-      } catch (error) {
+        const fetchedData = await fetch(query.split('-')[1], page);
+        setImages(prevImages => [...prevImages, ...fetchedData.results]);
+        totalPages.current = fetchedData.total_pages;
+
+        if (totalPages.current === 0) {
+          toast.error('Oops, please try another word!', {
+            duration: 2000,
+            position: 'bottom-center',
+          });
+        }
+      } catch {
         setError(true);
       } finally {
-        setLoading(false);
+        setLoad(false);
       }
     }
-    fetchData();
+
+    fetchImages();
   }, [query, page]);
 
+  const handleClick = () => {
+    setPage(page + 1);
+  };
+
+  function openModal(item) {
+    setSelectedItem(item);
+    setIsOpen(true);
+  }
+
+  function afterOpenModal() {
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.body.style.overflow = 'scroll';
+    setIsOpen(false);
+  }
+
   return (
-    <div>
-      <SearchBox onSearch={searchArticles} />
-      {error && <b>Oops, there was an error, please try reloading 😭</b>}
-      {articles.length > 0 && <Articles items={articles} />}
-      {loading && <b>Loading articles, please wait...</b>}
-      {articles.length > 0 && !loading && <button onClick={handleLoadMore}>Load more</button>}
-      <Toaster position="bottom-center" />
+    <div className={css.container}>
+      <SearchBar onSearch={searchImages} />
+      {images.length > 0 && <ImageGallery items={images} onClick={openModal} />}
+      {load && <Loader />}
+      {error && <ErrorMessage />}
+      {selectedItem && (
+        <ImageModal
+          isOpen={modalIsOpen}
+          onAfterOpen={afterOpenModal}
+          onRequestClose={closeModal}
+          selectedItem={selectedItem}
+        />
+      )}
+      {images.length > 0 && !load && <LoadMoreBtn onClick={handleClick} />}
+      <Toaster />
     </div>
   );
 };
