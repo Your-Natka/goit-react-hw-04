@@ -8,7 +8,7 @@ export const fetch = async (query, page) => {
       params: {
         query,
         page,
-        per_page: 26,
+        orientation: 'landscape',
       },
     }
   );
